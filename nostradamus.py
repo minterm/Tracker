@@ -1,5 +1,6 @@
-# Written to replace Gpredict on ELFIN's ESN. 
-# Written by Micah Cliffe <micah.cliffe@ucla.edu>
+# gui.py: contains core functionality for Nostradamus Tracker
+# Written for UCLA's ELFIN mission <elfin.igpp.ucla.edu>
+# By Micah Cliffe (KK6SLK) <micah.cliffe@ucla.edu>
 
 import datetime
 import urllib
@@ -167,6 +168,9 @@ class Predictor(object):
 
     def position(self, satName, date=None):
         # TODO: date = now however I do that    
+        if not date:
+            date = datetime.datetime.now()
+        self._station.date = date
         sat = None
         for s in self._sats:
             if (s.name == satName):
