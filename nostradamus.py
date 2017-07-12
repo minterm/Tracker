@@ -1,29 +1,32 @@
 # gui.py: contains core functionality for Nostradamus Tracker
 # Written for UCLA's ELFIN mission <elfin.igpp.ucla.edu>
 # By Micah Cliffe (KK6SLK) <micah.cliffe@ucla.edu>
+# Edited by Alexander Gonzalez (KM6ISP) <gonzalezalexander1997@gmail.com>
 
 import datetime
 import urllib
 import ephem
-import numpy as np
+import time
+from math import *
 
 CUBESATS = "http://www.celestrak.com/NORAD/elements/cubesat.txt"
 
 ################################################################################
-class Station(ephem.Observer):
-    def __init__(self, name=None, location=(0,0), elevation=0, callsign=None):
-        super(Station, self).__init__()
-        self.name = name
-        ''' Possible issue in not setting lat and long ''' 
+class Station():
+    def __init__(self, name=None, location=("0","0",0), callsign=None): 
+	self.name = name
+	self.location = ephem.Observer()
+        # location = (latitude, longitude, elevation) 
+        #lat and long weren't being set, issue resolved
         if (name.upper() == "KNUDSEN"):
-            self.lat       = np.deg2rad(34.07045)
-            self.long      = np.deg2rad(-118.441114)
-            self.elevation = 150 # meters
+            self.location.lat        = "34.07099"
+            self.location.long       = "-118.441114"
+            self.location.elevation  = 150 # meters
             self.callsign  = "W6YRA"
         else:
-            self.lat       = np.deg2rad(location[0])
-            self.long      = np.deg2rad(location[1])
-            self.elevation = elevation
+            self.location.lat       = location[0]
+            self.location.long      = location[1]
+            self.location.elevation = location[2]
             self.callsign  = callsign
 
 ################################################################################
@@ -61,9 +64,23 @@ class Satellite(object):
             self.callsign = callsign
 
     def getPosition(self, observer):
+        '''Returns azimuth and elevation'''
         body = self.body
         body.compute(observer)
-        return (body.az, body.alt)
+        return (degrees(body.az), degrees(body.alt))
+   
+    def getAzimuth(self, observer):
+        '''Returns azimuth in degrees'''
+        body = self.body
+        body.compute(observer)
+        return degrees(body.az)
+        
+    def getElevation(self, observer):
+        '''Returns elevation (above horizon) in degrees'''
+        body = self.body
+        body.compute(observer)
+        return degrees(body.alt)
+
 
 ################################################################################
 class Predictor(object):
@@ -81,8 +98,8 @@ class Predictor(object):
 
     ### Station Details ###
 
-    def setStation(self, name=None, location=(0,0), elevation=0, callsign=None):
-        self._station = Station(name, location, elevation, callsign)
+    def setStation(self, name=None, location=("0","0",0), callsign=None):
+        self._station = Station(name, location, callsign)
 
     def getStation(self):
         if hasattr(self._station, 'name'):
@@ -163,34 +180,80 @@ class Predictor(object):
                 f.readline()
                 l1 = f.readline()
         return sat
+    def printTLE(self, satName, filename="tle.txt"):
+        sat = None
+        with open(filename, 'r') as f:
+            l1  = f.readline()
+            while l1:
+                if satName in l1:
+                    l2  = f.readline()
+                    l3  = f.readline()
+                    sat = (l1, l2, l3)
+		    break
+		f.readline()
+                f.readline()
+                l1 = f.readline()    	
+        return sat
+
 
     ### Performance Functions ###
 
     def position(self, satName, date=None):
-        # TODO: date = now however I do that    
+        # date currently set to 'now' unless otherwise inputted   
         if not date:
-            date = datetime.datetime.now()
-        self._station.date = date
+            date = time.time()
+        self._station.location.date = datetime.datetime.utcfromtimestamp(date)
         sat = None
         for s in self._sats:
             if (s.name == satName):
                 sat = s
                 break
         if sat:
-            return sat.getPosition(self._station)
+            return sat.getPosition(self._station.location)
+        return None
+
+    def azimuth(self, satName, date=None):
+        if not date:
+            date = time.time()
+        self._station.location.date = datetime.datetime.utcfromtimestamp(    date)
+        sat = None
+        for s in self._sats:
+            if (s.name == satName):
+                sat = s
+                break
+        if sat:
+            return sat.getAzimuth(self._station.location)
+        return None
+     
+    def elevation(self, satName, date=None):
+        if not date:
+            date = time.time()
+        self._station.location.date = datetime.datetime.utcfromtimestamp(date)
+        sat = None
+        for s in self._sats:
+            if (s.name == satName):
+                sat = s
+                break
+        if sat:
+            return sat.getElevation(self._station.location)
         return None
 
 #TODO: what happens when TLE file doesn't exist, when can't update, when
 #      can't read?
 ################################################################################
-if __name__ == "__main__":
-    n = Predictor()
-    n.updateTLEs()
-    print n.getStation()
-    print n.addSatellite("firebird")
-    print n.getSatellites()
-    print n.removeSatellite("FIREBIRD 4")
-    print n.getSatellites()
-    n.addSatellite("firebird")
-    pos = n.position("FIREBIRD 4")
-    print pos
+'''
+while(1):
+    if __name__ == "__main__":
+        n = Predictor()
+        n.updateTLEs()
+        print n.getStation()
+        print n.addSatellite("firebird")
+        print n.getSatellites()
+        print n.removeSatellite("FIREBIRD 4")
+        print n.getSatellites()
+        n.addSatellite("firebird")
+        pos = n.position("FIREBIRD 4")
+        n.loadTLE("FIREBIRD 4")
+        print pos
+        time.sleep(.5)
+'''        
