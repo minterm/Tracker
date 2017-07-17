@@ -220,7 +220,7 @@ class Predictor(object):
     
     def velocity(self, satName, date=None):
 	if not date:
-		date = time.time()
+	    date = time.time()
 	self._station.location.date = datetime.datetime.utcfromtimestamp(date)
 	sat = None
 	for s in self._sats:
@@ -228,9 +228,29 @@ class Predictor(object):
 	        sat = s
 		break
 	if sat: 
-		return sat.getVelocity(self._station.location)
+	    return sat.getVelocity(self._station.location)
 	return None
+
     def nextpass(self, satName, date=None):
+        if not date:
+	    date = time.time()
+	self._station.location.date = datetime.datetime.utcfromtimestamp(date)
+	sat = None
+	for s in self._sats:
+	    if (s.name == satName):
+	        sat = s
+		break
+	if sat:
+	    pass_info = self._station.location.next_pass(sat)
+	    # creates six-element tuple  
+	    # 0 Rise time
+	    # 1 Rise azimuth
+	    # 2 Maximum altitude time
+	    # 3 Maximum altitude
+	    # 4 Set time
+   	    # 5 Set azimuth
+	    return pass_info
+        return None
 	
     def azimuth(self, satName, date=None):
         if not date:
