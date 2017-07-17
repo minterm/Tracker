@@ -68,6 +68,11 @@ class Satellite(object):
         body = self.body
         body.compute(observer)
         return (degrees(body.az), degrees(body.alt))
+    
+    def getVelocity(self, observer):
+	body = self.body
+	body.compute(observer)
+	return body.range_velocity/1000
    
     def getAzimuth(self, observer):
         '''Returns azimuth in degrees'''
@@ -211,7 +216,21 @@ class Predictor(object):
         if sat:
             return sat.getPosition(self._station.location)
         return None
-
+    
+    def velocity(self, satName, date=None):
+	if not date:
+		date = time.time()
+	self._station.location.date = datetime.datetime.utcfromtimestamp(date)
+	sat = None
+	for s in self._sats:
+	    if (s.name == satName):
+	        sat = s
+		break
+	if sat: 
+		return sat.getVelocity(self._station.location)
+	return None
+	
+	
     def azimuth(self, satName, date=None):
         if not date:
             date = time.time()
@@ -241,7 +260,6 @@ class Predictor(object):
 #TODO: what happens when TLE file doesn't exist, when can't update, when
 #      can't read?
 ################################################################################
-'''
 while(1):
     if __name__ == "__main__":
         n = Predictor()
@@ -249,11 +267,7 @@ while(1):
         print n.getStation()
         print n.addSatellite("firebird")
         print n.getSatellites()
-        print n.removeSatellite("FIREBIRD 4")
-        print n.getSatellites()
-        n.addSatellite("firebird")
         pos = n.position("FIREBIRD 4")
         n.loadTLE("FIREBIRD 4")
         print pos
-        time.sleep(.5)
-'''        
+        time.sleep(.5)      
