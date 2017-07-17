@@ -79,6 +79,7 @@ class Satellite(object):
         body = self.body
         body.compute(observer)
         return degrees(body.az)
+   
         
     def getElevation(self, observer):
         '''Returns elevation (above horizon) in degrees'''
@@ -229,7 +230,7 @@ class Predictor(object):
 	if sat: 
 		return sat.getVelocity(self._station.location)
 	return None
-	
+    def nextpass(self, satName, date=None):
 	
     def azimuth(self, satName, date=None):
         if not date:
