@@ -118,15 +118,17 @@ class Predictor(object):
                      downlink=None, mode=None, callsign=None):
         if (name.upper() == "FIREBIRD"):
             name = "FIREBIRD 4"
-        for s in self._sats:
-            if (name == sat.name):
-                print("Satellite already exists.")
-                return False
         body = self.loadTLE(name)
+        sat = Satellite(body, name, owner, uplink, downlink, mode, callsign)
+        #for s in self._sats:
+        #    if (name == sat.name):
+        #        print("Satellite already exists.")
+        #        return False
+        #body = self.loadTLE(name)
         if not body:
             print("TLE not found for " + name)
             return False
-        sat = Satellite(body, name, owner, uplink, downlink, mode, callsign)
+        #sat = Satellite(body, name, owner, uplink, downlink, mode, callsign)
         self._sats.append(sat)
         return True
 
